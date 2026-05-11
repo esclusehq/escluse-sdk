@@ -1,0 +1,6 @@
+{
+  "name": "@escluse/openapi",
+  "version": "0.1.0",
+  "description": "Escluse OpenAPI specification",
+  "files": ["openapi.yaml"]
+}

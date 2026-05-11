@@ -1,0 +1,831 @@
+openapi: 3.1.0
+info:
+  title: Escluse API
+  description: |
+    API for Escluse - Game server hosting platform.
+    
+    ## Base URL
+    - Production: `https://api.esluce.com/api/v1`
+    - WebSocket: `wss://api.esluce.com/api/v1/ws`
+  version: 1.0.0
+  contact:
+    name: Escluse
+    url: https://esluce.com
+
+servers:
+  - url: https://api.esluce.com/api/v1
+    description: Production
+
+paths:
+  /servers:
+    get:
+      summary: List servers
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: nodeId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of servers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServers'
+
+    post:
+      summary: Create server
+      tags: [Servers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerCreate'
+      responses:
+        '201':
+          description: Server created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+
+  /servers/{serverId}:
+    get:
+      summary: Get server
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      responses:
+        '200':
+          description: Server details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+
+    patch:
+      summary: Update server
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerUpdate'
+      responses:
+        '200':
+          description: Server updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+
+    delete:
+      summary: Delete server
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      responses:
+        '204':
+          description: Server deleted
+
+  /servers/{serverId}/actions:
+    post:
+      summary: Server action
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [start, stop, restart, kill, reinstall]
+      responses:
+        '200':
+          description: Action executed
+
+  /servers/{serverId}/stats:
+    get:
+      summary: Get server stats
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      responses:
+        '200':
+          description: Server stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerStatsResponse'
+
+  /servers/{serverId}/logs:
+    get:
+      summary: Get server logs
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+        - name: lines
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Server logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogsResponse'
+
+  /servers/{serverId}/backups:
+    get:
+      summary: List backups
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      responses:
+        '200':
+          description: List of backups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupsResponse'
+
+    post:
+      summary: Create backup
+      tags: [Servers]
+      parameters:
+        - $ref: '#/components/parameters/ServerId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Backup created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupResponse'
+
+  /nodes:
+    get:
+      summary: List nodes
+      tags: [Nodes]
+      responses:
+        '200':
+          description: List of nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesResponse'
+
+    post:
+      summary: Create node
+      tags: [Nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeCreate'
+      responses:
+        '201':
+          description: Node created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeResponse'
+
+  /nodes/{nodeId}:
+    get:
+      summary: Get node
+      tags: [Nodes]
+      parameters:
+        - $ref: '#/components/parameters/NodeId'
+      responses:
+        '200':
+          description: Node details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeResponse'
+
+    delete:
+      summary: Delete node
+      tags: [Nodes]
+      parameters:
+        - $ref: '#/components/parameters/NodeId'
+      responses:
+        '204':
+          description: Node deleted
+
+  /nodes/{nodeId}/stats:
+    get:
+      summary: Get node stats
+      tags: [Nodes]
+      parameters:
+        - $ref: '#/components/parameters/NodeId'
+      responses:
+        '200':
+          description: Node stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeStatsResponse'
+
+  /users/me:
+    get:
+      summary: Get current user
+      tags: [Users]
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+    patch:
+      summary: Update profile
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                avatar:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /users/me/keys:
+    get:
+      summary: List API keys
+      tags: [Users]
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeysResponse'
+
+    post:
+      summary: Create API key
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+
+  /users/me/keys/{keyId}:
+    delete:
+      summary: Delete API key
+      tags: [Users]
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: API key deleted
+
+  /billing/subscription:
+    get:
+      summary: Get subscription
+      tags: [Billing]
+      responses:
+        '200':
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+
+    delete:
+      summary: Cancel subscription
+      tags: [Billing]
+      responses:
+        '204':
+          description: Subscription cancelled
+
+  /billing/plans:
+    get:
+      summary: List pricing plans
+      tags: [Billing]
+      responses:
+        '200':
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlansResponse'
+
+  /billing/invoices:
+    get:
+      summary: List invoices
+      tags: [Billing]
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoicesResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+
+    PerPage:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        default: 20
+
+    ServerId:
+      name: serverId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    NodeId:
+      name: nodeId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    Server:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nodeId:
+          type: string
+        game:
+          type: string
+          enum: [minecraft, minecraft-bedrock, palworld, rust, valheim, ark, fivem, custom]
+        image:
+          type: string
+        status:
+          type: string
+          enum: [starting, running, stopping, stopped, error, installing, reinstalling]
+        ip:
+          type: string
+        port:
+          type: integer
+        memory:
+          type: integer
+        cpu:
+          type: integer
+        disk:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ServerCreate:
+      type: object
+      required: [name, nodeId, game, image, memory, cpu, disk]
+      properties:
+        name:
+          type: string
+        nodeId:
+          type: string
+        game:
+          type: string
+        image:
+          type: string
+        memory:
+          type: integer
+        cpu:
+          type: integer
+        disk:
+          type: integer
+
+    ServerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        memory:
+          type: integer
+        cpu:
+          type: integer
+        disk:
+          type: integer
+
+    ServerStats:
+      type: object
+      properties:
+        serverId:
+          type: string
+        cpu:
+          type: number
+        memory:
+          type: number
+        disk:
+          type: number
+        players:
+          type: integer
+        uptime:
+          type: integer
+
+    ServerBackup:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        isSuccessful:
+          type: boolean
+        isLocked:
+          type: boolean
+
+    Node:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        port:
+          type: integer
+        status:
+          type: string
+          enum: [online, offline, installing, draining]
+        location:
+          type: string
+        serversCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    NodeCreate:
+      type: object
+      required: [name, address, port, location]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        port:
+          type: integer
+        location:
+          type: string
+
+    NodeStats:
+      type: object
+      properties:
+        nodeId:
+          type: string
+        cpu:
+          type: number
+        memory:
+          type: number
+        memoryTotal:
+          type: number
+        disk:
+          type: number
+        diskTotal:
+          type: number
+        networkIn:
+          type: number
+        networkOut:
+          type: number
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        avatar:
+          type: string
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+        createdAt:
+          type: string
+          format: date-time
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+        plan:
+          type: string
+          enum: [hobby, pro, business]
+        status:
+          type: string
+          enum: [active, cancelled, past_due, trialing, expired]
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        serversLimit:
+          type: integer
+        serversUsed:
+          type: integer
+        price:
+          type: number
+        currency:
+          type: string
+
+    PricingPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        plan:
+          type: string
+          enum: [hobby, pro, business]
+        price:
+          type: number
+        currency:
+          type: string
+        interval:
+          type: string
+          enum: [month, year]
+        limits:
+          type: object
+          properties:
+            servers:
+              type: integer
+            nodes:
+              type: integer
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [paid, pending, failed, refunded]
+        createdAt:
+          type: string
+          format: date-time
+        url:
+          type: string
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        key:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+        success:
+          type: boolean
+        message:
+          type: string
+        error:
+          type: string
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            perPage:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    ServerResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Server'
+
+    PaginatedServers:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Server'
+
+    ServerStatsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ServerStats'
+
+    LogsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: string
+
+    BackupsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServerBackup'
+
+    BackupResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ServerBackup'
+
+    NodesResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Node'
+
+    NodeResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Node'
+
+    NodeStatsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/NodeStats'
+
+    UserResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/User'
+
+    ApiKeysResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApiKey'
+
+    ApiKeyResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ApiKey'
+
+    SubscriptionResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Subscription'
+
+    PlansResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PricingPlan'
+
+    InvoicesResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Invoice'
+
+security:
+  - BearerAuth: []
